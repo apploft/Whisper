@@ -7,7 +7,7 @@ public enum WhisperAction: String {
 
 let whisperFactory: WhisperFactory = WhisperFactory()
 
-class WhisperFactory: NSObject {
+open class WhisperFactory: NSObject {
 
   struct AnimationTiming {
     static let movement: TimeInterval = 0.3
@@ -26,7 +26,7 @@ class WhisperFactory: NSObject {
 
   // MARK: - Initializers
 
-  override init() {
+  public override init() {
     super.init()
     WindowFrameObserver.shared.startObserving()
     
@@ -38,7 +38,7 @@ class WhisperFactory: NSObject {
     NotificationCenter.default.removeObserver(self)
   }
 
-  func craft(_ message: Message, navigationController: UINavigationController, action: WhisperAction) {
+  public func craft(_ message: Message, navigationController: UINavigationController, action: WhisperAction) {
     self.navigationController = navigationController
     self.navigationController?.delegate = self
     presentTimer.invalidate()
@@ -84,7 +84,7 @@ class WhisperFactory: NSObject {
     }
   }
 
-  func silentWhisper(_ controller: UINavigationController, after: TimeInterval) {
+  public func silentWhisper(_ controller: UINavigationController, after: TimeInterval) {
     self.navigationController = controller
     guard let navigationController = self.navigationController else { return }
     
@@ -282,7 +282,7 @@ class WhisperFactory: NSObject {
 
 extension WhisperFactory: UINavigationControllerDelegate {
 
-  func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+  public func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
     var maximumY = navigationController.navigationBar.frame.maxY - UIApplication.shared.statusBarFrame.height
 
     for subview in navigationController.navigationBar.subviews {
@@ -296,7 +296,7 @@ extension WhisperFactory: UINavigationControllerDelegate {
     whisperView.frame.origin.y = maximumY
   }
 
-  func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+  public func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
 
     for subview in navigationController.navigationBar.subviews where subview is WhisperView {
       moveControllerViews(true)
