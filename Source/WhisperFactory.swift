@@ -67,6 +67,8 @@ class WhisperFactory: NSObject {
       }
 
       whisperView.frame.origin.y = maximumY
+      whisperView.frame.size.width = navigationController.view.bounds.size.width
+      whisperView.autoresizingMask = .flexibleWidth
       navigationController.navigationBar.addSubview(whisperView)
     }
 
@@ -196,6 +198,7 @@ class WhisperFactory: NSObject {
     let message = Message(title: title, textColor: textColor, backgroundColor: backgroundColor, images: images)
 
     whisperView = WhisperView(height: navigationController.navigationBar.frame.height, message: message)
+    whisperView.autoresizingMask = .flexibleWidth
     navigationController.navigationBar.addSubview(whisperView)
     whisperView.frame.size.height = 0
 
@@ -268,7 +271,7 @@ class WhisperFactory: NSObject {
       whisper.frame = CGRect(
         x: whisper.frame.origin.x,
         y: maximumY,
-        width: UIApplication.shared.delegate?.window??.frame.width ?? UIScreen.main.bounds.width,
+        width: navigationController.navigationBar.bounds.size.width,
         height: whisper.frame.size.height)
       whisper.setupFrames()
     }

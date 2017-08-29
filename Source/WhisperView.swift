@@ -61,6 +61,11 @@ open class WhisperView: UIView {
     setupFrames()
     clipsToBounds = true
   }
+    
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        setupFrames()
+    }
 
   public required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
