@@ -12,11 +12,7 @@ public class WindowFrameObserver: NSObject {
     static public let shared = WindowFrameObserver()
     
     private var isObserving: Bool = false
-    
-    deinit {
-        stopObserving()
-        NotificationCenter.default.removeObserver(self)
-    }
+    private weak var window: UIWindow?
     
     public func startObserving() {
         if isObserving == false {
@@ -24,16 +20,17 @@ public class WindowFrameObserver: NSObject {
             
             NotificationCenter.default.addObserver(self, selector: #selector(stopObserving), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
             if let window = UIApplication.shared.delegate?.window {
+                self.window = window
                 window?.addObserver(self, forKeyPath: "frame", options: .new, context: nil)
             }
         }
     }
     
     public func stopObserving() {
+        guard isObserving else { return }
+        
         isObserving = false
-        if let window = UIApplication.shared.delegate?.window {
-            window?.removeObserver(self, forKeyPath: "frame")
-        }
+        self.window?.removeObserver(self, forKeyPath: "frame")
         NotificationCenter.default.removeObserver(self)
     }
     
