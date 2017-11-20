@@ -61,10 +61,13 @@ open class WhisperFactory: NSObject {
         $0.frame.origin.y = -10
         $0.alpha = 0
       }
-
-      for subview in navigationController.navigationBar.subviews {
-        if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
-      }
+        
+        let os = ProcessInfo.processInfo.operatingSystemVersion
+        if os.majorVersion < 11 {
+            for subview in navigationController.navigationBar.subviews {
+                if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
+            }
+        }
 
       whisperView.frame.origin.y = maximumY
       whisperView.frame.size.width = navigationController.view.bounds.size.width
@@ -204,8 +207,11 @@ open class WhisperFactory: NSObject {
 
     var maximumY = navigationController.navigationBar.frame.height
 
-    for subview in navigationController.navigationBar.subviews {
-      if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
+    let os = ProcessInfo.processInfo.operatingSystemVersion
+    if os.majorVersion < 11 {
+        for subview in navigationController.navigationBar.subviews {
+            if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
+        }
     }
 
     whisperView.frame.origin.y = maximumY
@@ -258,15 +264,19 @@ open class WhisperFactory: NSObject {
 
   // MARK: - Handling screen orientation
 
-  func orientationDidChange() {
+  public func orientationDidChange() {
     guard let navigationController = self.navigationController else { return }
     for subview in navigationController.navigationBar.subviews {
       guard let whisper = subview as? WhisperView else { continue }
 
       var maximumY = navigationController.navigationBar.frame.height
-      for subview in navigationController.navigationBar.subviews where subview != whisper {
-        if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
-      }
+        
+        let os = ProcessInfo.processInfo.operatingSystemVersion
+        if os.majorVersion < 11 {
+            for subview in navigationController.navigationBar.subviews where subview != whisper {
+                if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
+            }
+        }
 
       whisper.frame = CGRect(
         x: whisper.frame.origin.x,
@@ -288,9 +298,12 @@ extension WhisperFactory: UINavigationControllerDelegate {
     for subview in navigationController.navigationBar.subviews {
       if subview is WhisperView { navigationController.navigationBar.bringSubview(toFront: subview) }
 
-      if subview.frame.maxY > maximumY && !(subview is WhisperView) {
-        maximumY = subview.frame.maxY
-      }
+        let os = ProcessInfo.processInfo.operatingSystemVersion
+        if os.majorVersion < 11 {
+            if subview.frame.maxY > maximumY && !(subview is WhisperView) {
+                maximumY = subview.frame.maxY
+            }
+        }
     }
 
     whisperView.frame.origin.y = maximumY
