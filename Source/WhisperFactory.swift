@@ -62,8 +62,11 @@ open class WhisperFactory: NSObject {
         $0.alpha = 0
       }
         
-        let os = ProcessInfo.processInfo.operatingSystemVersion
-        if os.majorVersion < 11 {
+        if #available(iOS 11.0, *) {
+            if let searchBar = navigationController.visibleViewController?.navigationItem.searchController?.searchBar {
+                maximumY += searchBar.frame.size.height
+            }
+        } else {
             for subview in navigationController.navigationBar.subviews {
                 if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
             }
@@ -167,7 +170,7 @@ open class WhisperFactory: NSObject {
 
   func hideView() {
     moveControllerViews(false)
-
+    
     UIView.animate(withDuration: AnimationTiming.movement, animations: {
       self.whisperView.frame.size.height = 0
       for subview in self.whisperView.transformViews {
@@ -206,9 +209,12 @@ open class WhisperFactory: NSObject {
     whisperView.frame.size.height = 0
 
     var maximumY = navigationController.navigationBar.frame.height
-
-    let os = ProcessInfo.processInfo.operatingSystemVersion
-    if os.majorVersion < 11 {
+    
+    if #available(iOS 11.0, *) {
+        if let searchBar = navigationController.visibleViewController?.navigationItem.searchController?.searchBar {
+            maximumY += searchBar.frame.size.height
+        }
+    } else {
         for subview in navigationController.navigationBar.subviews {
             if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
         }
@@ -264,28 +270,61 @@ open class WhisperFactory: NSObject {
 
   // MARK: - Handling screen orientation
 
-  public func orientationDidChange() {
-    guard let navigationController = self.navigationController else { return }
-    for subview in navigationController.navigationBar.subviews {
-      guard let whisper = subview as? WhisperView else { continue }
-
-      var maximumY = navigationController.navigationBar.frame.height
-        
-        let os = ProcessInfo.processInfo.operatingSystemVersion
-        if os.majorVersion < 11 {
-            for subview in navigationController.navigationBar.subviews where subview != whisper {
-                if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
-            }
+  func orientationDidChange() {
+    
+    guard let whisper = whisperView else {return}
+    
+    UIView.animate(withDuration: AnimationTiming.movement, animations: {
+        whisper.frame.size.height = 0
+        for subview in self.whisperView.transformViews {
+            subview.frame.origin.y = -10
+            subview.alpha = 0
         }
-
-      whisper.frame = CGRect(
-        x: whisper.frame.origin.x,
-        y: maximumY,
-        width: navigationController.navigationBar.bounds.size.width,
-        height: whisper.frame.size.height)
-      whisper.setupFrames()
+    }, completion: { _ in
+        
+    })
+    
+    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: { [weak self] in
+        guard let navigationController = self?.navigationController else { return }
+        for subview in navigationController.navigationBar.subviews {
+            guard let whisper = subview as? WhisperView else { continue }
+            
+            var maximumY = navigationController.navigationBar.frame.height
+            
+            if #available(iOS 11.0, *) {
+                if let searchBar = navigationController.visibleViewController?.navigationItem.searchController?.searchBar {
+                    maximumY += searchBar.frame.size.height
+                }
+            } else {
+                for subview in navigationController.navigationBar.subviews where subview != whisper {
+                    if subview.frame.maxY > maximumY && subview.frame.height > 0 { maximumY = subview.frame.maxY }
+                }
+            }
+            
+            whisper.frame = CGRect(
+                x: whisper.frame.origin.x,
+                y: maximumY,
+                width: navigationController.navigationBar.bounds.size.width,
+                height: whisper.frame.size.height)
+            whisper.setupFrames()
+            
+            UIView.animate(withDuration: AnimationTiming.movement, animations: {
+                whisper.frame.size.height = WhisperView.Dimensions.height
+                for subview in whisper.transformViews {
+                    subview.frame.origin.y = 0
+                    
+                    if subview == whisper.complementImageView {
+                        subview.frame.origin.y = (WhisperView.Dimensions.height - WhisperView.Dimensions.imageSize) / 2
+                    }
+                    
+                    subview.alpha = 1
+                }
+            }, completion: { _ in
+                
+            })
+        }
+        })
     }
-  }
 }
 
 // MARK: UINavigationControllerDelegate
@@ -297,9 +336,12 @@ extension WhisperFactory: UINavigationControllerDelegate {
 
     for subview in navigationController.navigationBar.subviews {
       if subview is WhisperView { navigationController.navigationBar.bringSubview(toFront: subview) }
-
-        let os = ProcessInfo.processInfo.operatingSystemVersion
-        if os.majorVersion < 11 {
+        
+        if #available(iOS 11.0, *) {
+            if let searchBar = navigationController.visibleViewController?.navigationItem.searchController?.searchBar {
+                maximumY += searchBar.frame.size.height
+            }
+        } else {
             if subview.frame.maxY > maximumY && !(subview is WhisperView) {
                 maximumY = subview.frame.maxY
             }
