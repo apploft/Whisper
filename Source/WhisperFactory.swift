@@ -24,14 +24,14 @@ open class WhisperFactory: NSObject {
   var presentTimer = Timer()
   var navigationStackCount = 0
 
+    var navigationBarFrameObserver: NSKeyValueObservation?
+    var isUpdating: Bool = false
+
   // MARK: - Initializers
 
   public override init() {
     super.init()
     WindowFrameObserver.shared.startObserving()
-    
-    NotificationCenter.default.addObserver(self, selector: #selector(WhisperFactory.orientationDidChange), name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
-    NotificationCenter.default.addObserver(self, selector: #selector(WhisperFactory.orientationDidChange), name: NSNotification.Name(rawValue: Notifications.windowFrameChanged), object: nil)
   }
 
   deinit {
@@ -76,6 +76,11 @@ open class WhisperFactory: NSObject {
       whisperView.frame.size.width = navigationController.view.bounds.size.width
       whisperView.autoresizingMask = .flexibleWidth
       navigationController.navigationBar.addSubview(whisperView)
+        navigationBarFrameObserver = navigationController.navigationBar.observe(\.frame, changeHandler: { (_, value) in
+            if !self.isUpdating {
+               self.orientationDidChange()
+            }
+        })
     }
 
     if containsWhisper {
@@ -274,20 +279,20 @@ open class WhisperFactory: NSObject {
     
     guard let whisper = whisperView else {return}
     
-    UIView.animate(withDuration: AnimationTiming.movement, animations: {
-        whisper.frame.size.height = 0
-        for subview in self.whisperView.transformViews {
-            subview.frame.origin.y = -10
-            subview.alpha = 0
-        }
-    }, completion: { _ in
-        
-    })
+    isUpdating = true
+    whisper.isHidden = true
+    whisper.frame.size.height = 0
+    for subview in self.whisperView.transformViews {
+        subview.frame.origin.y = -10
+        subview.alpha = 0
+    }
     
     DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: { [weak self] in
         guard let navigationController = self?.navigationController else { return }
         for subview in navigationController.navigationBar.subviews {
             guard let whisper = subview as? WhisperView else { continue }
+            
+            whisper.isHidden = false
             
             var maximumY = navigationController.navigationBar.frame.height
             
@@ -308,7 +313,7 @@ open class WhisperFactory: NSObject {
                 height: whisper.frame.size.height)
             whisper.setupFrames()
             
-            UIView.animate(withDuration: AnimationTiming.movement, animations: {
+            UIView.animate(withDuration: 0.2, animations: {
                 whisper.frame.size.height = WhisperView.Dimensions.height
                 for subview in whisper.transformViews {
                     subview.frame.origin.y = 0
@@ -319,6 +324,7 @@ open class WhisperFactory: NSObject {
                     
                     subview.alpha = 1
                 }
+            self?.isUpdating = false
             }, completion: { _ in
                 
             })
