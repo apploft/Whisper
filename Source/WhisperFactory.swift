@@ -32,6 +32,13 @@ open class WhisperFactory: NSObject {
   public override init() {
     super.init()
     WindowFrameObserver.shared.startObserving()
+    
+    if #available(iOS 11.0, *) {
+        
+    } else {
+        NotificationCenter.default.addObserver(self, selector: #selector(WhisperFactory.orientationDidChange), name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(WhisperFactory.orientationDidChange), name: NSNotification.Name(rawValue: Notifications.windowFrameChanged), object: nil)
+    }
   }
 
   deinit {
@@ -76,11 +83,12 @@ open class WhisperFactory: NSObject {
       whisperView.frame.size.width = navigationController.view.bounds.size.width
       whisperView.autoresizingMask = .flexibleWidth
       navigationController.navigationBar.addSubview(whisperView)
-        navigationBarFrameObserver = navigationController.navigationBar.observe(\.frame, changeHandler: { (_, value) in
-            if !self.isUpdating {
-               self.orientationDidChange()
-            }
-        })
+        
+        if #available(iOS 11.0, *) {
+            navigationBarFrameObserver = navigationController.navigationBar.observe(\.frame, changeHandler: { (_, value) in
+                self.orientationDidChange()
+            })
+        }
     }
 
     if containsWhisper {
@@ -184,6 +192,7 @@ open class WhisperFactory: NSObject {
       }
       }, completion: { _ in
         self.whisperView.removeFromSuperview()
+        self.isUpdating = false
     })
   }
 
@@ -277,9 +286,8 @@ open class WhisperFactory: NSObject {
 
   func orientationDidChange() {
     
-    guard let whisper = whisperView else {return}
+    guard let whisper = whisperView, isUpdating == false else {return}
     
-    isUpdating = true
     whisper.isHidden = true
     whisper.frame.size.height = 0
     for subview in self.whisperView.transformViews {
@@ -288,9 +296,14 @@ open class WhisperFactory: NSObject {
     }
     
     DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0, execute: { [weak self] in
-        guard let navigationController = self?.navigationController else { return }
+        guard let navigationController = self?.navigationController else {
+            self?.isUpdating = false
+            return
+        }
         for subview in navigationController.navigationBar.subviews {
             guard let whisper = subview as? WhisperView else { continue }
+            
+            self?.isUpdating = true
             
             whisper.isHidden = false
             
@@ -324,9 +337,8 @@ open class WhisperFactory: NSObject {
                     
                     subview.alpha = 1
                 }
-            self?.isUpdating = false
             }, completion: { _ in
-                
+                self?.isUpdating = false
             })
         }
         })
