@@ -198,11 +198,11 @@ open class WhisperFactory: NSObject {
 
   // MARK: - Timer methods
 
-  func delayFired(_ timer: Timer) {
+  @objc func delayFired(_ timer: Timer) {
     hideView()
   }
 
-  func presentFired(_ timer: Timer) {
+  @objc func presentFired(_ timer: Timer) {
     guard let navigationController = self.navigationController,
       let userInfo = timer.userInfo as? [String : AnyObject],
       let title = userInfo["title"] as? String,
@@ -284,7 +284,7 @@ open class WhisperFactory: NSObject {
 
   // MARK: - Handling screen orientation
 
-  func orientationDidChange() {
+  @objc func orientationDidChange() {
     
     guard let whisper = whisperView, isUpdating == false else {return}
     
