@@ -150,7 +150,7 @@ open class ShoutView: UIView {
 
   // MARK: - Setup
 
-  public func setupFrames() {
+  @objc public func setupFrames() {
     internalHeight = (UIApplication.shared.isStatusBarHidden ? 55 : 65)
 
     let totalWidth = UIApplication.shared.delegate?.window??.frame.width ?? UIScreen.main.bounds.width
@@ -209,7 +209,7 @@ open class ShoutView: UIView {
 
   // MARK: - Timer methods
 
-  open func displayTimerDidFire() {
+  @objc open func displayTimerDidFire() {
     shouldSilent = true
 
     if panGestureActive { return }
@@ -263,7 +263,7 @@ open class ShoutView: UIView {
 
   // MARK: - Handling screen orientation
 
-  func orientationDidChange() {
+  @objc func orientationDidChange() {
     setupFrames()
   }
 }
